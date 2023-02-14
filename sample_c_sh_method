@@ -1,0 +1,46 @@
+import json
+import time
+import random
+import hashlib
+import hmac
+import base64
+import requests
+
+# create dictionary object with API parameters
+data = {
+    "amount": 100.0,
+    "currency": "USD",
+    "metadata": {
+        "order_id": "12345"
+    }
+}
+
+# serialize dictionary to JSON string
+json_data = json.dumps(data)
+
+# generate Unix timestamp
+timestamp = str(int(time.time()))
+
+# generate random nonce
+nonce = str(random.randint(0, 1000000))
+
+# concatenate request data for signature
+request_data = "POST\nhttps://sandboxapi.rapyd.net/v1/payments\n" + timestamp + "\n" + nonce + "\n" + json_data + "\n"
+
+# generate signature
+signature = base64.b64encode(hmac.new(bytes("YOUR_API_SECRET_KEY", "utf-8"), bytes(request_data, "utf-8"), digestmod=hashlib.sha256).digest())
+
+# set headers for API request
+headers = {
+    "Content-Type": "application/json",
+    "access_key": "YOUR_API_ACCESS_KEY",
+    "timestamp": timestamp,
+    "nonce": nonce,
+    "signature": signature.decode('utf-8')
+}
+
+# post request to API endpoint
+response = requests.post("https://sandboxapi.rapyd.net/v1/payments", data=json_data, headers=headers)
+
+# print response
+print(response.text)
